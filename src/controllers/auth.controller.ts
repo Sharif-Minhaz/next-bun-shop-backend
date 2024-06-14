@@ -70,7 +70,9 @@ async function registrationController(ctx: Context) {
 }
 
 async function viewAllUsersController(ctx: Context) {
-	return ctx.text("All users");
+	const rows = await (sql as Function)`SELECT id, name, email, role FROM users`;
+
+	return ctx.json({ data: rows, message: "User information" });
 }
 
 async function logoutController(ctx: Context) {

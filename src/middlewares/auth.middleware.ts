@@ -10,6 +10,9 @@ async function isLoggedIn(ctx: Context, next: Next) {
 
 	const decodedPayload = await verify(tokenToVerify, secretKey as string);
 
+	// Attach userData to the context object
+	ctx.set("user", decodedPayload);
+
 	await next();
 }
 
