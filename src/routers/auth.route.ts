@@ -11,7 +11,7 @@ import { isAdmin, isLoggedIn, isNotLoggedIn } from "../middlewares/auth.middlewa
 
 const authRouter = new Hono();
 
-authRouter.get("/", isAdmin, viewAllUsersController);
+authRouter.get("/", isLoggedIn, isAdmin, viewAllUsersController);
 authRouter.post("/login", isNotLoggedIn, zValidator("json", loginSchema), loginController);
 authRouter.post(
 	"/registration",
