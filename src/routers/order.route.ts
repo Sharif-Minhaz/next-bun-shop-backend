@@ -8,17 +8,25 @@ import {
 	cancelOrderController,
 	deleteOrderController,
 	getAllOrderController,
+	getUserAllOrderController,
 } from "../controllers/order.controller";
+import { addOrderSchema } from "../validators/order";
 
 const orderRoute = new Hono();
 
 orderRoute.get("/", isLoggedIn, isAdmin, getAllOrderController);
-orderRoute.post("/add", isLoggedIn, addOrderController);
+orderRoute.post(
+	"/add/:productId",
+	isLoggedIn,
+	zValidator("json", addOrderSchema),
+	addOrderController
+);
 
 orderRoute.patch("/cancel/:orderId", isLoggedIn, isAdmin, cancelOrderController);
 orderRoute.patch("/accept/:orderId", isLoggedIn, isAdmin, acceptOrderController);
 
-orderRoute.get("/:userId", isLoggedIn, getAllOrderController); // get joint product table with user information
+orderRoute.get("/", isLoggedIn, getAllOrderController);
+orderRoute.get("/:userId", isLoggedIn, getUserAllOrderController); // get joint product table with user information
 
 orderRoute.delete("/:orderId", isLoggedIn, isAdmin, deleteOrderController);
 
