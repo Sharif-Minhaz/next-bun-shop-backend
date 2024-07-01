@@ -9,7 +9,7 @@ import { cors } from "hono/cors";
 const app = new Hono();
 
 app.use(logger());
-app.use(cors());
+app.use(cors({ origin: ["http://localhost:3001"], credentials: true }));
 
 app.get("/", (c) => {
 	const text = figlet.textSync("Server is running!");

@@ -14,25 +14,31 @@ async function loginController(ctx: Context) {
 		const userInfo = await sql`SELECT * FROM users WHERE email = ${email}`;
 
 		if (userInfo[0]?.email !== email) {
-			return ctx.json({ message: "Email or password wrong, try again" }, 400);
+			return ctx.json(
+				{ success: false, message: "Email or password wrong, try again." },
+				401
+			);
 		}
 
 		const isMatch = await Bun.password.verify(password, userInfo[0]?.password);
 
 		if (isMatch) {
+			const data = {
+				id: userInfo[0].id,
+				name: userInfo[0].name,
+				email: userInfo[0].email,
+				role: userInfo[0].role,
+			};
+
 			// sign jwt to the browser end
-			await signJWT(
-				{
-					id: userInfo[0].id,
-					email: userInfo[0].email,
-					role: userInfo[0].role,
-				},
-				ctx
+			await signJWT(data, ctx);
+			return ctx.json(
+				{ success: true, data, message: `Login successful, welcome ${userInfo[0]?.name}` },
+				200
 			);
-			return ctx.json({ message: `Login successful, welcome ${userInfo[0]?.name}` }, 200);
 		}
 
-		ctx.json({ message: "Email or password wrong, try again" }, 400);
+		return ctx.json({ success: false, message: "Email or password wrong, try again." }, 401);
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });
@@ -41,11 +47,11 @@ async function loginController(ctx: Context) {
 
 async function registrationController(ctx: Context) {
 	try {
-		const { name, email, role, password } = await ctx.req.json();
+		const { name, email, role = "user", password } = await ctx.req.json();
 
 		const checkEmailQuery = await sql`SELECT id FROM users WHERE email = ${email}`;
 		if (checkEmailQuery.length > 0) {
-			return ctx.json({ message: "Email already exists, Try new one" }, 400);
+			return ctx.json({ message: "Email already exists, Try a new one." }, 401);
 		}
 
 		const id = crypto.randomUUID();
@@ -56,13 +62,14 @@ async function registrationController(ctx: Context) {
 		});
 
 		const rows =
-			await sql`INSERT INTO users (id, name, password, role, email) VALUES (${id}, ${name}, ${hashedPassword}, ${role}, ${email}) RETURNING *`;
+			await sql`INSERT INTO users (id, name, password, role, email) VALUES (${id}, ${name}, ${hashedPassword}, ${role}, ${email}) RETURNING id, name, role, email`;
 
 		// sign jwt to the browser end
 		await signJWT(
 			{
 				id: rows[0].id,
 				email: rows[0].email,
+				name: rows[0].name,
 				role: rows[0].role,
 			},
 			ctx
@@ -70,6 +77,7 @@ async function registrationController(ctx: Context) {
 
 		return ctx.json(
 			{
+				success: true,
 				data: rows[0],
 				message: "Registration successful!",
 			},
@@ -77,7 +85,10 @@ async function registrationController(ctx: Context) {
 		);
 	} catch (error) {
 		console.error(error);
-		throw new HTTPException(500, { message: "Server error occurred", cause: error });
+		throw new HTTPException(500, {
+			message: "Server error occurred.",
+			cause: error,
+		});
 	}
 }
 
