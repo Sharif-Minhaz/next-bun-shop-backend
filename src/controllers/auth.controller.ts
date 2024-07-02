@@ -1,9 +1,10 @@
 import { Context } from "hono";
 import { connect } from "../db";
 import { signJWT } from "./jwt.controller";
-import { deleteCookie } from "hono/cookie";
+import { deleteCookie, getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 import { NeonQueryFunction } from "@neondatabase/serverless";
+import { verify } from "hono/jwt";
 
 const sql: NeonQueryFunction<false, false> = await connect();
 
@@ -96,7 +97,26 @@ async function viewAllUsersController(ctx: Context) {
 	try {
 		const rows = await sql`SELECT id, name, email, role FROM users`;
 
-		return ctx.json({ data: rows, message: "User information" });
+		return ctx.json({ data: rows, message: "User information" }, 200);
+	} catch (error) {
+		console.error(error);
+		throw new HTTPException(500, { message: "Server error occurred", cause: error });
+	}
+}
+
+async function getCurrentUserController(ctx: Context) {
+	try {
+		const secretKey = Bun.env.JWT_SECRET;
+		const tokenToVerify = getCookie(ctx, "auth");
+
+		if (!tokenToVerify) {
+			return ctx.json({ data: undefined, message: "Token not found" }, 200);
+		}
+
+		const user = await verify(tokenToVerify, secretKey as string);
+		const rows = await sql`SELECT id, name, email, role FROM users WHERE email = ${user.email}`;
+
+		return ctx.json({ data: rows[0], message: "User information" });
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });
@@ -118,4 +138,10 @@ async function logoutController(ctx: Context) {
 	}
 }
 
-export { loginController, registrationController, viewAllUsersController, logoutController };
+export {
+	loginController,
+	registrationController,
+	getCurrentUserController,
+	viewAllUsersController,
+	logoutController,
+};

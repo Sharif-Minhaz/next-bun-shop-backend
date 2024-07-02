@@ -3,6 +3,7 @@ import {
 	loginController,
 	registrationController,
 	viewAllUsersController,
+	getCurrentUserController,
 	logoutController,
 } from "../controllers/auth.controller";
 import { loginSchema, regSchema } from "../validators/auth";
@@ -12,6 +13,7 @@ import { isAdmin, isLoggedIn, isNotLoggedIn } from "../middlewares/auth.middlewa
 const authRouter = new Hono();
 
 authRouter.get("/", isLoggedIn, isAdmin, viewAllUsersController);
+authRouter.get("/current", getCurrentUserController);
 authRouter.post("/login", isNotLoggedIn, zValidator("json", loginSchema), loginController);
 authRouter.post(
 	"/registration",
