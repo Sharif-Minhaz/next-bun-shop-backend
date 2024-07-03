@@ -4,8 +4,14 @@ const addProductSchema = z.object({
 	name: z
 		.string({ required_error: "Product name is required" })
 		.min(1, "Product name is required"),
-	brand: z
-		.string({ required_error: "Product brand is required" })
+	description: z
+		.string({ required_error: "Product description is required" })
+		.min(1, "Product name is required"),
+	image: z
+		.string({ required_error: "Product image is required" })
+		.min(1, "Product name is required"),
+	category: z
+		.number({ required_error: "Product category id is required" })
 		.min(1, "Product brand is required"),
 	price: z
 		.number({ required_error: "Price is required" })

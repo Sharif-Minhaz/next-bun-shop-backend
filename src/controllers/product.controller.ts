@@ -37,7 +37,7 @@ async function getSingleProductController(ctx: Context) {
 
 async function addProductController(ctx: Context) {
 	try {
-		const { name, price, stock, brand } = await ctx.req.json();
+		const { name, price, stock, category, description, image } = await ctx.req.json();
 
 		const id = crypto.randomUUID();
 
@@ -47,10 +47,13 @@ async function addProductController(ctx: Context) {
 		}
 
 		const rows =
-			await sql`INSERT INTO products (id, name, price, stock, brand) VALUES (${id}, ${name}, ${price}, ${stock}, ${brand}) RETURNING *`;
+			await sql`INSERT INTO products (id, name, price, stock, category_id, description, image) VALUES (${id}, ${name}, ${Number(
+				price
+			)}, ${Number(stock)}, ${category}, ${description}, ${image}) RETURNING *`;
 
 		return ctx.json(
 			{
+				success: true,
 				data: rows[0],
 				message: "Product added successful!",
 			},

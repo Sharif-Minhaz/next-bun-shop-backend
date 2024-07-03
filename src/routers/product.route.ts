@@ -15,7 +15,13 @@ const productRouter = new Hono();
 productRouter.get("/", getAllProductController);
 productRouter.get("/:productId", getSingleProductController);
 
-productRouter.post("/add", isLoggedIn, zValidator("json", addProductSchema), addProductController);
+productRouter.post(
+	"/add",
+	isLoggedIn,
+	isAdmin,
+	zValidator("json", addProductSchema),
+	addProductController
+);
 
 productRouter.patch(
 	"/update/:productId",
