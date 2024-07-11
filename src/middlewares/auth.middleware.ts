@@ -9,7 +9,7 @@ async function isLoggedIn(ctx: Context, next: Next) {
 		const tokenToVerify = getCookie(ctx, "auth");
 
 		if (!tokenToVerify)
-			return ctx.json({ message: "Token not found, user not logged in." }, 400);
+			return ctx.json({ message: "Token not found, user not logged in." }, 401);
 
 		const decodedPayload = await verify(tokenToVerify, secretKey as string);
 
@@ -28,7 +28,7 @@ async function isNotLoggedIn(ctx: Context, next: Next) {
 		const token = getCookie(ctx, "auth");
 
 		if (token) {
-			return ctx.json({ message: "User already logged in" }, 400);
+			return ctx.json({ message: "User already logged in" }, 401);
 		}
 
 		await next();
@@ -44,7 +44,7 @@ async function isAdmin(ctx: Context, next: Next) {
 		const tokenToVerify = getCookie(ctx, "auth");
 
 		if (!tokenToVerify)
-			return ctx.json({ message: "Token not found, user not logged in." }, 400);
+			return ctx.json({ message: "Token not found, user not logged in." }, 401);
 
 		const decodedPayload = await verify(tokenToVerify, secretKey as string);
 
@@ -52,7 +52,7 @@ async function isAdmin(ctx: Context, next: Next) {
 			return await next();
 		}
 
-		return ctx.json({ message: "User is not an admin" }, 400);
+		return ctx.json({ message: "User is not an admin" }, 401);
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });

@@ -12,7 +12,7 @@ async function signJWT(payload: JWTPayload, ctx: Context) {
 			Bun.env.JWT_SECRET as string
 		);
 
-		if (!token) return ctx.json({ message: "Token not generated" }, 400);
+		if (!token) return ctx.json({ message: "Token not generated" }, 401);
 
 		setCookie(ctx, "auth", token, {
 			path: "/",

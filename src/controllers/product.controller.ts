@@ -43,7 +43,7 @@ async function addProductController(ctx: Context) {
 
 		const checkProductExists = await sql`SELECT id FROM products WHERE name = ${name}`;
 		if (checkProductExists.length > 0) {
-			return ctx.json({ message: "Product already exists, Try adding new one" }, 400);
+			return ctx.json({ message: "Product already exists, Try adding new one" }, 409);
 		}
 
 		const rows =
@@ -67,7 +67,7 @@ async function addProductController(ctx: Context) {
 
 async function updateProductController(ctx: Context) {
 	try {
-		const { name, price, stock, brand } = await ctx.req.json();
+		const { name, price, stock, category, description, image } = await ctx.req.json();
 		const id = ctx.req.param("productId");
 
 		const checkProductExists = await sql`SELECT id FROM products WHERE id = ${id}`;
@@ -76,10 +76,11 @@ async function updateProductController(ctx: Context) {
 		}
 
 		const rows =
-			await sql`UPDATE products SET name=${name}, price=${price}, stock=${stock}, brand=${brand} WHERE id=${id} RETURNING *`;
+			await sql`UPDATE products SET name=${name}, price=${price}, stock=${stock}, category_id=${category}, description=${description}, image=${image} WHERE id=${id} RETURNING *`;
 
 		return ctx.json(
 			{
+				success: true,
 				data: rows[0],
 				message: "Product updated successfully!",
 			},
@@ -104,6 +105,7 @@ async function deleteProductController(ctx: Context) {
 
 		return ctx.json(
 			{
+				success: true,
 				data: rows[0],
 				message: "Product deleted successfully!",
 			},

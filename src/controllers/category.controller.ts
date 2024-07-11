@@ -23,7 +23,7 @@ async function addCategoryController(ctx: Context) {
 		const checkName =
 			await sql`SELECT * FROM categories WHERE LOWER(category_name) = LOWER(${category_name})`;
 		if (checkName.length) {
-			return ctx.json({ success: false, message: "Category already exist" }, 400);
+			return ctx.json({ success: false, message: "Category already exist" }, 409);
 		}
 
 		const rows =
