@@ -6,10 +6,30 @@ import { HTTPException } from "hono/http-exception";
 const sql: NeonQueryFunction<false, false> = await connect();
 
 async function getAllProductController(ctx: Context) {
-	try {
-		const rows = await sql`SELECT * FROM products`;
+	const { page = 1, categories } = ctx.req.query();
 
-		return ctx.json({ data: rows, message: "Product information" });
+	const ITEMS_PER_PAGE = 8;
+	const offset = (Number(page) - 1) * ITEMS_PER_PAGE;
+
+	try {
+		const cat_data = categories?.split(",").map((data) => Number(data));
+
+		const [rows, countResult] = await Promise.all([
+			sql`
+				SELECT * FROM products
+				WHERE category_id::integer = ANY(${cat_data})
+				LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+			`,
+			sql`
+				SELECT COUNT(*) FROM products WHERE category_id::integer = ANY(${cat_data})
+			`,
+		]);
+
+		return ctx.json({
+			data: rows,
+			count: countResult[0].count,
+			message: "Product information",
+		});
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });
