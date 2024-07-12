@@ -6,7 +6,9 @@ import { HTTPException } from "hono/http-exception";
 const sql: NeonQueryFunction<false, false> = await connect();
 
 async function getAllProductController(ctx: Context) {
-	const { page = 1, categories } = ctx.req.query();
+	const { page = 1, categories, q = "" } = ctx.req.query();
+
+	console.log("Query: ", q);
 
 	const ITEMS_PER_PAGE = 8;
 	const offset = (Number(page) - 1) * ITEMS_PER_PAGE;
@@ -18,10 +20,13 @@ async function getAllProductController(ctx: Context) {
 			sql`
 				SELECT * FROM products
 				WHERE category_id::integer = ANY(${cat_data})
+				AND name ILIKE ${"%" + q + "%"}
 				LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
 			`,
 			sql`
-				SELECT COUNT(*) FROM products WHERE category_id::integer = ANY(${cat_data})
+				SELECT COUNT(*) FROM products 
+				WHERE category_id::integer = ANY(${cat_data})
+				AND name ILIKE ${"%" + q + "%"}
 			`,
 		]);
 
