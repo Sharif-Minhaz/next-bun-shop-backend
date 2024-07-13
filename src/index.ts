@@ -28,6 +28,6 @@ apiRouter.route("/order", orderRouter);
 app.route("/api/v1", apiRouter);
 
 export default {
-	port: 5000,
+	port: Bun.env.PORT || 5000,
 	fetch: app.fetch,
 };
