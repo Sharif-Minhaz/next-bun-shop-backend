@@ -8,8 +8,6 @@ const sql: NeonQueryFunction<false, false> = await connect();
 async function getAllProductController(ctx: Context) {
 	const { page = 1, categories, q = "" } = ctx.req.query();
 
-	console.log("Query: ", q);
-
 	const ITEMS_PER_PAGE = 8;
 	const offset = (Number(page) - 1) * ITEMS_PER_PAGE;
 
@@ -45,7 +43,12 @@ async function getSingleProductController(ctx: Context) {
 	try {
 		const id = ctx.req.param("productId");
 
-		const checkProductExists = await sql`SELECT * FROM products WHERE id = ${id}`;
+		const checkProductExists = await sql`
+				SELECT products.id, products.name, products.price, products.stock, products.description, products.image, categories.category_name FROM products 
+				INNER JOIN categories ON products.category_id::integer = categories.id
+				WHERE products.id = ${id};
+			`;
+
 		if (!checkProductExists.length) {
 			return ctx.json({ message: "Product doesn't exist" }, 404);
 		}

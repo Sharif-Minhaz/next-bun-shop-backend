@@ -121,7 +121,7 @@ async function getUserAllOrderController(ctx: Context) {
 			INNER JOIN products ON orders.productid = products.id 
 			WHERE orders.userid = ${userId}`;
 
-		return ctx.json({ data: rows, message: "Order information" });
+		return ctx.json({ success: true, data: rows, message: "Order information" });
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });
