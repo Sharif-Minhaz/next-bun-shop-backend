@@ -5,6 +5,7 @@ import { deleteCookie, getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 import { NeonQueryFunction } from "@neondatabase/serverless";
 import { verify } from "hono/jwt";
+import { DOMAIN } from "../constants";
 
 const sql: NeonQueryFunction<false, false> = await connect();
 
@@ -128,7 +129,7 @@ async function logoutController(ctx: Context) {
 		deleteCookie(ctx, "auth", {
 			path: "/",
 			secure: true,
-			domain: "localhost",
+			domain: DOMAIN,
 		});
 
 		return ctx.json({ message: "Logout successful" }, 200);

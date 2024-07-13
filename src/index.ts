@@ -10,7 +10,12 @@ import { cors } from "hono/cors";
 const app = new Hono();
 
 app.use(logger());
-app.use(cors({ origin: ["http://localhost:3001"], credentials: true }));
+app.use(
+	cors({
+		origin: ["http://localhost:3001", "https://next-bun-shop-frontend.vercel.app"],
+		credentials: true,
+	})
+);
 
 app.get("/", (c) => {
 	const text = figlet.textSync("Server is running!");

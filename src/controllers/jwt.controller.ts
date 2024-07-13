@@ -3,6 +3,7 @@ import { JWTPayload } from "hono/utils/jwt/types";
 import { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
+import { DOMAIN } from "../constants";
 
 async function signJWT(payload: JWTPayload, ctx: Context) {
 	try {
@@ -17,7 +18,7 @@ async function signJWT(payload: JWTPayload, ctx: Context) {
 		setCookie(ctx, "auth", token, {
 			path: "/",
 			secure: true,
-			domain: "localhost",
+			domain: DOMAIN,
 			httpOnly: true,
 			maxAge: expiresIn, // Set maxAge to match JWT expiration
 			sameSite: "Strict",
