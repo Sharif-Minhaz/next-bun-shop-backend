@@ -129,7 +129,7 @@ async function logoutController(ctx: Context) {
 		deleteCookie(ctx, "auth", {
 			path: "/",
 			secure: true,
-			domain: DOMAIN,
+			// domain: DOMAIN,
 		});
 
 		return ctx.json({ message: "Logout successful" }, 200);
