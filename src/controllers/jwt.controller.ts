@@ -18,7 +18,7 @@ async function signJWT(payload: JWTPayload, ctx: Context) {
 		setCookie(ctx, "auth", token, {
 			path: "/",
 			secure: true,
-			domain: DOMAIN,
+			// domain: DOMAIN,
 			httpOnly: true,
 			maxAge: expiresIn, // Set maxAge to match JWT expiration
 			sameSite: Bun.env.NODE_ENV === "production" ? "None" : "Strict",
