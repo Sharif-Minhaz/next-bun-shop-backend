@@ -129,7 +129,8 @@ async function logoutController(ctx: Context) {
 		deleteCookie(ctx, "auth", {
 			path: "/",
 			secure: true,
-			// domain: DOMAIN,
+			domain: DOMAIN,
+			sameSite: Bun.env.NODE_ENV === "production" ? "None" : "Strict",
 		});
 
 		return ctx.json({ message: "Logout successful" }, 200);
