@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { init_sslCommerzController } from "../controllers/sslCommerz.controller";
+import { init_ssl_controller } from "../controllers/sslCommerz.controller";
 
 const sslCommerz = new Hono();
 
-sslCommerz.get("/", init_sslCommerzController);
+sslCommerz.post("/", init_ssl_controller);
 
 export default sslCommerz;

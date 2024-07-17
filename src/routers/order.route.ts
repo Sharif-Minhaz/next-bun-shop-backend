@@ -22,11 +22,11 @@ orderRoute.post(
 	addOrderController
 );
 
-orderRoute.patch("/cancel/:orderId", isLoggedIn, isAdmin, cancelOrderController);
+orderRoute.patch("/cancel/:orderId/:productId", isLoggedIn, isAdmin, cancelOrderController);
 orderRoute.patch("/accept/:orderId", isLoggedIn, isAdmin, acceptOrderController);
 
 orderRoute.get("/", isLoggedIn, getAllOrderController);
-orderRoute.get("/:userId", isLoggedIn, getUserAllOrderController); // get joint product table with user information
+orderRoute.get("/user", isLoggedIn, getUserAllOrderController);
 
 orderRoute.delete("/:orderId", isLoggedIn, isAdmin, deleteOrderController);
 

@@ -7,7 +7,27 @@ const sql: NeonQueryFunction<false, false> = await connect();
 
 async function getAllOrderController(ctx: Context) {
 	try {
-		const rows = await sql`SELECT * FROM orders`;
+		const rows = await sql`SELECT 
+				orders.id, 
+				orders.count, 
+				orders.orderat, 
+				orders.totalprice, 
+				orders.status, 
+				orders.userid, 
+				users.name AS username, 
+				users.email, 
+				orders.productid, 
+				products.name AS productname, 
+				products.price, 
+				products.image,
+				products.stock, 
+				products.category_id,
+				categories.category_name
+			FROM orders 
+			INNER JOIN users ON orders.userid = users.id 
+			INNER JOIN products ON orders.productid = products.id 
+			INNER JOIN categories ON orders.category_id = categories.id 
+		`;
 
 		return ctx.json({ data: rows, message: "Order information" });
 	} catch (error) {
@@ -30,11 +50,18 @@ async function addOrderController(ctx: Context) {
 		const totalPrice = count * checkProduct[0].price;
 		const userId = ctx.get("user").id;
 		const orderId = crypto.randomUUID();
+		const category_id = checkProduct[0].category_id;
+		const tranxId = crypto.randomUUID();
 
-		const rows =
-			await sql`INSERT INTO orders (id, userid, productid, count, totalprice) VALUES (${orderId}, ${userId}, ${productId}, ${count}, ${totalPrice}) RETURNING *`;
+		// insert order information
+		const rows1 = sql`INSERT INTO orders (id, userid, productid, count, totalprice, category_id, transaction_id) VALUES (${orderId}, ${userId}, ${productId}, ${count}, ${totalPrice}, ${category_id}, ${tranxId}) RETURNING *`;
 
-		return ctx.json({ data: rows[0], message: "Order information" });
+		// update product stock
+		const rows2 = sql`UPDATE products SET stock = stock - ${count} WHERE id = ${productId} RETURNING *`;
+
+		const [orderRows, _] = await Promise.all([rows1, rows2]);
+
+		return ctx.json({ data: orderRows[0], message: "Order information" });
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });
@@ -44,6 +71,7 @@ async function addOrderController(ctx: Context) {
 async function cancelOrderController(ctx: Context) {
 	try {
 		const orderId = ctx.req.param("orderId");
+		const productId = ctx.req.param("productId");
 
 		const checkOrder = await sql`SELECT * FROM orders WHERE id = ${orderId}`;
 		if (!checkOrder.length) {
@@ -52,6 +80,10 @@ async function cancelOrderController(ctx: Context) {
 
 		const rows =
 			await sql`UPDATE orders SET status='cancelled' WHERE id = ${orderId} RETURNING *`;
+
+		if (rows.length) {
+			await sql`UPDATE products SET stock = stock + ${checkOrder[0].count} WHERE id = ${productId}`;
+		}
 
 		return ctx.json({ data: rows[0], message: "Order cancelled successfully" });
 	} catch (error) {
@@ -99,7 +131,7 @@ async function deleteOrderController(ctx: Context) {
 
 async function getUserAllOrderController(ctx: Context) {
 	try {
-		const userId = ctx.req.param("userId");
+		const userId = ctx.get("user").id;
 
 		const rows = await sql`
 			SELECT 
@@ -115,10 +147,13 @@ async function getUserAllOrderController(ctx: Context) {
 				products.name AS productname, 
 				products.price, 
 				products.stock, 
-				products.brand 
+				products.image,
+				products.category_id,
+				categories.category_name
 			FROM orders 
 			INNER JOIN users ON orders.userid = users.id 
 			INNER JOIN products ON orders.productid = products.id 
+			INNER JOIN categories ON orders.category_id = categories.id 
 			WHERE orders.userid = ${userId}`;
 
 		return ctx.json({ success: true, data: rows, message: "Order information" });

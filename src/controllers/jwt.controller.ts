@@ -21,7 +21,7 @@ async function signJWT(payload: JWTPayload, ctx: Context) {
 			domain: DOMAIN,
 			httpOnly: true,
 			maxAge: expiresIn,
-			sameSite: Bun.env.NODE_ENV === "production" ? "None" : "Strict",
+			sameSite: "None",
 		});
 
 		return token;

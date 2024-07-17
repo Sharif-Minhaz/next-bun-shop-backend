@@ -1,15 +1,17 @@
 import { Context } from "hono";
 import SSLCommerzPayment from "sslcommerz-lts";
 
-async function init_sslCommerzController(ctx: Context) {
+async function init_ssl_controller(ctx: Context) {
+	const { price } = await ctx.req.json();
+
 	const data = {
-		total_amount: 100,
+		total_amount: price || 2000,
 		currency: "BDT",
-		tran_id: "REF123", // use unique tran_id for each api call
-		success_url: "http://localhost:3030/success",
-		fail_url: "http://localhost:3030/fail",
-		cancel_url: "http://localhost:3030/cancel",
-		ipn_url: "http://localhost:3030/ipn",
+		tran_id: crypto.randomUUID(),
+		success_url: `${Bun.env.CLIENT_ROOT}/success`,
+		fail_url: `${Bun.env.CLIENT_ROOT}/fail`,
+		cancel_url: `${Bun.env.CLIENT_ROOT}/cancel`,
+		ipn_url: `${Bun.env.CLIENT_ROOT}/ipn`,
 		shipping_method: "Courier",
 		product_name: "Computer.",
 		product_category: "Electronic",
@@ -32,31 +34,24 @@ async function init_sslCommerzController(ctx: Context) {
 		ship_postcode: 1000,
 		ship_country: "Bangladesh",
 	};
-	const sslcz = new SSLCommerzPayment(
+	const sslcommerz = new SSLCommerzPayment(
 		Bun.env.SSLCOMMERZ_STORE_ID,
 		Bun.env.SSLCOMMERZ_STORE_PASSWORD,
-		Bun.env.IS_LIVE || false
+		false
 	);
 
-	sslcz
-		.init(data)
-		.then((apiResponse: any) => {
-			// Redirect the user to payment gateway
-			let GatewayPageURL = apiResponse.GatewayPageURL;
+	console.log(sslcommerz);
 
-			return ctx.redirect(GatewayPageURL);
-		})
-		.catch((err: any) => {
-			return ctx.json({ success: false, err });
-		});
-
-	return ctx.json(
-		{
-			success: false,
-			message: "sslcommerz is not working!",
-		},
-		500
-	);
+	try {
+		const apiResponse = await sslcommerz.init(data);
+		console.log(apiResponse);
+		const GatewayPageURL = apiResponse.GatewayPageURL;
+		console.log(GatewayPageURL);
+		ctx.redirect(GatewayPageURL || "/", 301);
+	} catch (err) {
+		console.error(err);
+		ctx.json({ success: false, message: "Something went wrong", err }, 500);
+	}
 }
 
-export { init_sslCommerzController };
+export { init_ssl_controller };
