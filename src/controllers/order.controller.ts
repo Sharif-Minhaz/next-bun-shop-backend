@@ -38,6 +38,7 @@ async function getAllOrderController(ctx: Context) {
 
 async function addOrderController(ctx: Context) {
 	try {
+		const user = ctx.get("user");
 		const productId = ctx.req.param("productId");
 		const { count } = await ctx.req.json();
 
@@ -47,11 +48,29 @@ async function addOrderController(ctx: Context) {
 		}
 
 		// getting the final order price
-		const totalPrice = count * checkProduct[0].price;
-		const userId = ctx.get("user").id;
+		const totalPrice = count * checkProduct[0]?.price;
+		const userId = user.id;
 		const orderId = crypto.randomUUID();
 		const category_id = checkProduct[0].category_id;
 		const tranxId = crypto.randomUUID();
+
+		// call ssl outer api for purchasing
+
+		const res = await fetch("http://localhost:8080/ssl-request", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				price: totalPrice,
+				name: checkProduct[0]?.name,
+				customer_name: user.name,
+				customer_email: user.email,
+				tran_id: tranxId,
+			}),
+		});
+
+		const gatewayUrl = await res.json();
 
 		// insert order information
 		const rows1 = sql`INSERT INTO orders (id, userid, productid, count, totalprice, category_id, transaction_id) VALUES (${orderId}, ${userId}, ${productId}, ${count}, ${totalPrice}, ${category_id}, ${tranxId}) RETURNING *`;
@@ -59,9 +78,11 @@ async function addOrderController(ctx: Context) {
 		// update product stock
 		const rows2 = sql`UPDATE products SET stock = stock - ${count} WHERE id = ${productId} RETURNING *`;
 
-		const [orderRows, _] = await Promise.all([rows1, rows2]);
+		await Promise.all([rows1, rows2]);
 
-		return ctx.json({ data: orderRows[0], message: "Order information" });
+		console.log("Bun.js - Hono", gatewayUrl);
+
+		return ctx.json({ url: gatewayUrl.url, message: "Payment redirect url" }, 201);
 	} catch (error) {
 		console.error(error);
 		throw new HTTPException(500, { message: "Server error occurred", cause: error });

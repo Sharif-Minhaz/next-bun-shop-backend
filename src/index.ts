@@ -5,7 +5,7 @@ import authRouter from "./routers/auth.route";
 import productRouter from "./routers/product.route";
 import orderRouter from "./routers/order.route";
 import categoryRouter from "./routers/category.route";
-import sslCommerzRouter from "./routers/sslcommerz.route";
+import paymentRouter from "./routers/payment.route";
 import { cors } from "hono/cors";
 
 const app = new Hono();
@@ -26,10 +26,10 @@ app.get("/", (c) => {
 const apiRouter = new Hono();
 
 apiRouter.route("/auth", authRouter);
-apiRouter.route("/sslcommerz", sslCommerzRouter);
 apiRouter.route("/category", categoryRouter);
 apiRouter.route("/product", productRouter);
 apiRouter.route("/order", orderRouter);
+apiRouter.route("/payment", paymentRouter);
 
 // Mount the base router to /api/v1
 app.route("/api/v1", apiRouter);
