@@ -15,6 +15,7 @@ app.use(
 	cors({
 		origin: ["http://localhost:3001", "https://next-bun-shop-frontend.vercel.app"],
 		credentials: true,
+		allowHeaders: ["Authorization", "Content-Type", "Accept"],
 	})
 );
 
@@ -33,6 +34,16 @@ apiRouter.route("/payment", paymentRouter);
 
 // Mount the base router to /api/v1
 app.route("/api/v1", apiRouter);
+
+// default 404 route
+app.notFound((c) => {
+	return c.text("404: Not Found", 404);
+});
+
+// default 500 route
+app.onError((err, c) => {
+	return c.text(`500: ${err.message}`, 500);
+});
 
 export default {
 	port: Bun.env.PORT || 5000,

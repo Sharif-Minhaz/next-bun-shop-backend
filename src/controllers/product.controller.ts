@@ -65,7 +65,22 @@ async function getSingleProductController(ctx: Context) {
 
 async function addProductController(ctx: Context) {
 	try {
+		console.log("============ Add product controller ============");
 		const { name, price, stock, category, description, image } = await ctx.req.json();
+		console.log(
+			"name: ",
+			name,
+			"price: ",
+			price,
+			"stock: ",
+			stock,
+			"category: ",
+			category,
+			"description: ",
+			description,
+			"image: ",
+			image
+		);
 
 		const id = crypto.randomUUID();
 
@@ -83,7 +98,7 @@ async function addProductController(ctx: Context) {
 			{
 				success: true,
 				data: rows[0],
-				message: "Product added successful!",
+				message: "Product added successfully!",
 			},
 			201
 		);

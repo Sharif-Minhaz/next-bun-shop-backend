@@ -6,9 +6,10 @@ import { HTTPException } from "hono/http-exception";
 async function isLoggedIn(ctx: Context, next: Next) {
 	try {
 		const secretKey = Bun.env.JWT_SECRET;
-		const tokenToVerify = getCookie(ctx, "auth");
+		const tokenToVerify = ctx.req.header("authorization")?.split(" ")[1];
+		console.log("Authorization token: ", tokenToVerify);
 
-		if (!tokenToVerify)
+		if (!tokenToVerify || tokenToVerify === "null")
 			return ctx.json({ message: "Token not found, user not logged in." }, 401);
 
 		const decodedPayload = await verify(tokenToVerify, secretKey as string);
@@ -25,7 +26,8 @@ async function isLoggedIn(ctx: Context, next: Next) {
 
 async function isNotLoggedIn(ctx: Context, next: Next) {
 	try {
-		const token = getCookie(ctx, "auth");
+		const token = ctx.req.header("authorization")?.split(" ")[1];
+		console.log("Authorization token: ", token);
 
 		if (token) {
 			return ctx.json({ message: "User already logged in" }, 401);
@@ -41,9 +43,10 @@ async function isNotLoggedIn(ctx: Context, next: Next) {
 async function isAdmin(ctx: Context, next: Next) {
 	try {
 		const secretKey = Bun.env.JWT_SECRET;
-		const tokenToVerify = getCookie(ctx, "auth");
+		const tokenToVerify = ctx.req.header("authorization")?.split(" ")[1];
+		console.log("Authorization token: ", tokenToVerify);
 
-		if (!tokenToVerify)
+		if (!tokenToVerify || tokenToVerify === "null")
 			return ctx.json({ message: "Token not found, user not logged in." }, 401);
 
 		const decodedPayload = await verify(tokenToVerify, secretKey as string);

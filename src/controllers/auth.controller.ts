@@ -1,11 +1,10 @@
 import { Context } from "hono";
 import { connect } from "../db";
 import { signJWT } from "./jwt.controller";
-import { deleteCookie, getCookie } from "hono/cookie";
+import { deleteCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 import { NeonQueryFunction } from "@neondatabase/serverless";
 import { verify } from "hono/jwt";
-import { DOMAIN } from "../constants";
 
 const sql: NeonQueryFunction<false, false> = await connect();
 
@@ -33,9 +32,15 @@ async function loginController(ctx: Context) {
 			};
 
 			// sign jwt to the browser end
-			await signJWT(data, ctx);
+			const token = await signJWT(data, ctx);
+
 			return ctx.json(
-				{ success: true, data, message: `Login successful, welcome ${userInfo[0]?.name}` },
+				{
+					success: true,
+					data,
+					token,
+					message: `Login successful, welcome ${userInfo[0]?.name}`,
+				},
 				200
 			);
 		}
@@ -65,17 +70,6 @@ async function registrationController(ctx: Context) {
 
 		const rows =
 			await sql`INSERT INTO users (id, name, password, role, email) VALUES (${id}, ${name}, ${hashedPassword}, ${role}, ${email}) RETURNING id, name, role, email`;
-
-		// sign jwt to the browser end
-		await signJWT(
-			{
-				id: rows[0].id,
-				email: rows[0].email,
-				name: rows[0].name,
-				role: rows[0].role,
-			},
-			ctx
-		);
 
 		return ctx.json(
 			{
@@ -107,14 +101,21 @@ async function viewAllUsersController(ctx: Context) {
 
 async function getCurrentUserController(ctx: Context) {
 	try {
-		const secretKey = Bun.env.JWT_SECRET;
-		const tokenToVerify = getCookie(ctx, "auth");
+		const token = ctx.req.query("token");
 
-		if (!tokenToVerify) {
-			return ctx.json({ data: undefined, message: "Token not found" }, 200);
+		console.log("token from query: ", token);
+
+		const secretKey = Bun.env.JWT_SECRET;
+		const tokenToVerify = token;
+
+		if (!tokenToVerify || tokenToVerify === "null") {
+			return ctx.json({ message: "Token not found" }, 200);
 		}
 
 		const user = await verify(tokenToVerify, secretKey as string);
+
+		if (!user) return ctx.json({ message: "User not found" }, 404);
+
 		const rows = await sql`SELECT id, name, email, role FROM users WHERE email = ${user.email}`;
 
 		return ctx.json({ data: rows[0], message: "User information" });
@@ -129,7 +130,6 @@ async function logoutController(ctx: Context) {
 		deleteCookie(ctx, "auth", {
 			path: "/",
 			secure: true,
-			domain: DOMAIN,
 			sameSite: Bun.env.NODE_ENV === "production" ? "None" : "Strict",
 		});
 

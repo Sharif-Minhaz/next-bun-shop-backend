@@ -13,8 +13,8 @@ productRouter.get("/", getAllCategoriesController);
 
 productRouter.post(
 	"/add",
-	isAdmin,
 	isLoggedIn,
+	isAdmin,
 	zValidator("json", addCategorySchema),
 	addCategoryController
 );
