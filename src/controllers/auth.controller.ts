@@ -103,8 +103,6 @@ async function getCurrentUserController(ctx: Context) {
 	try {
 		const token = ctx.req.query("token");
 
-		console.log("token from query: ", token);
-
 		const secretKey = Bun.env.JWT_SECRET;
 		const tokenToVerify = token;
 

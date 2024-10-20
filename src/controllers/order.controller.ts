@@ -27,6 +27,7 @@ async function getAllOrderController(ctx: Context) {
 			INNER JOIN users ON orders.userid = users.id 
 			INNER JOIN products ON orders.productid = products.id 
 			INNER JOIN categories ON orders.category_id = categories.id 
+			ORDER BY orders.orderat DESC
 		`;
 
 		return ctx.json({ data: rows, message: "Order information" });
@@ -37,7 +38,9 @@ async function getAllOrderController(ctx: Context) {
 }
 
 async function addOrderController(ctx: Context) {
+	// print the auth header
 	try {
+		const token = ctx.req.header("authorization")?.split(" ")[1];
 		const user = ctx.get("user");
 		const productId = ctx.req.param("productId");
 		const { count } = await ctx.req.json();
@@ -51,12 +54,12 @@ async function addOrderController(ctx: Context) {
 		const totalPrice = count * checkProduct[0]?.price;
 		const userId = user.id;
 		const orderId = crypto.randomUUID();
-		const category_id = checkProduct[0].category_id;
 		const tranxId = crypto.randomUUID();
+		const category_id = checkProduct[0].category_id;
 
 		// call ssl outer api for purchasing
 
-		const res = await fetch("http://localhost:8080/ssl-request", {
+		const res = await fetch(`${process.env.SSL_API_URL}/ssl-request`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -67,6 +70,7 @@ async function addOrderController(ctx: Context) {
 				customer_name: user.name,
 				customer_email: user.email,
 				tran_id: tranxId,
+				auth_token: token,
 			}),
 		});
 
@@ -79,8 +83,6 @@ async function addOrderController(ctx: Context) {
 		const rows2 = sql`UPDATE products SET stock = stock - ${count} WHERE id = ${productId} RETURNING *`;
 
 		await Promise.all([rows1, rows2]);
-
-		console.log("Bun.js - Hono", gatewayUrl);
 
 		return ctx.json({ url: gatewayUrl.url, message: "Payment redirect url" }, 201);
 	} catch (error) {
@@ -175,7 +177,9 @@ async function getUserAllOrderController(ctx: Context) {
 			INNER JOIN users ON orders.userid = users.id 
 			INNER JOIN products ON orders.productid = products.id 
 			INNER JOIN categories ON orders.category_id = categories.id 
-			WHERE orders.userid = ${userId}`;
+			WHERE orders.userid = ${userId}	
+			ORDER BY orders.orderat DESC
+		`;
 
 		return ctx.json({ success: true, data: rows, message: "Order information" });
 	} catch (error) {

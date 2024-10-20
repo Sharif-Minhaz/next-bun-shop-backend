@@ -14,7 +14,7 @@ async function connect() {
 		}
 
 		const rows = await (sql as NeonQueryFunction<false, false>)`SELECT version()`;
-		console.log(rows[0].version, "-> Database connected successfully!");
+		console.info(rows[0].version, "-> Database connected successfully!");
 		return sql;
 	} catch (error) {
 		console.error(error);

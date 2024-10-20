@@ -1,13 +1,12 @@
 import { verify } from "hono/jwt";
 import { Context, Next } from "hono";
-import { getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 
 async function isLoggedIn(ctx: Context, next: Next) {
+	const paramsToken = ctx.req.query("token");
 	try {
 		const secretKey = Bun.env.JWT_SECRET;
-		const tokenToVerify = ctx.req.header("authorization")?.split(" ")[1];
-		console.log("Authorization token: ", tokenToVerify);
+		const tokenToVerify = paramsToken || ctx.req.header("authorization")?.split(" ")[1];
 
 		if (!tokenToVerify || tokenToVerify === "null")
 			return ctx.json({ message: "Token not found, user not logged in." }, 401);
@@ -25,11 +24,11 @@ async function isLoggedIn(ctx: Context, next: Next) {
 }
 
 async function isNotLoggedIn(ctx: Context, next: Next) {
+	const paramsToken = ctx.req.query("token");
 	try {
-		const token = ctx.req.header("authorization")?.split(" ")[1];
-		console.log("Authorization token: ", token);
+		const token = paramsToken || ctx.req.header("authorization")?.split(" ")[1];
 
-		if (token) {
+		if (token && token !== "null") {
 			return ctx.json({ message: "User already logged in" }, 401);
 		}
 
@@ -41,10 +40,10 @@ async function isNotLoggedIn(ctx: Context, next: Next) {
 }
 
 async function isAdmin(ctx: Context, next: Next) {
+	const paramsToken = ctx.req.query("token");
 	try {
 		const secretKey = Bun.env.JWT_SECRET;
-		const tokenToVerify = ctx.req.header("authorization")?.split(" ")[1];
-		console.log("Authorization token: ", tokenToVerify);
+		const tokenToVerify = paramsToken || ctx.req.header("authorization")?.split(" ")[1];
 
 		if (!tokenToVerify || tokenToVerify === "null")
 			return ctx.json({ message: "Token not found, user not logged in." }, 401);
